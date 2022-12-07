@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 project(PiStrument VERSION 1.0.0)
 pico_sdk_init()
 
-add_executable(PiStrument src/main.c)
+add_executable(PiStrument src/main.c src/st7789.c)
 
 target_link_libraries(PiStrument
   pico_stdlib
