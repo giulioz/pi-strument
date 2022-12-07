@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "st7789.h"
+#include "RotaryEncoder.h"
 
 #define SINE_WAVE_TABLE_LEN 2048
 #define SAMPLES_PER_BUFFER 256
@@ -18,7 +19,7 @@ const struct st7789_config lcd_config = {
     .gpio_clk = PIN_LCD_SCK,
     .gpio_cs  = PIN_LCD_TCS,
     .gpio_dc  = PIN_LCD_DC,
-    .gpio_rst = PIN_LCD_RST,
+    // .gpio_rst = PIN_LCD_RST,
     // .gpio_bl  = 0,
 };
 const int LCD_WIDTH = 240;
@@ -26,8 +27,8 @@ const int LCD_HEIGHT = 320;
 
 struct audio_buffer_pool *init_audio() {
   static audio_format_t audio_format = {
-          .format = AUDIO_BUFFER_FORMAT_PCM_S16,
           .sample_freq = 24000,
+          .format = AUDIO_BUFFER_FORMAT_PCM_S16,
           .channel_count = 1,
   };
 
@@ -41,8 +42,8 @@ struct audio_buffer_pool *init_audio() {
   bool __unused ok;
   const struct audio_format *output_format;
   struct audio_i2s_config config = {
-          .data_pin = PICO_AUDIO_I2S_DATA_PIN,
-          .clock_pin_base = PICO_AUDIO_I2S_CLOCK_PIN_BASE,
+          .data_pin = PIN_I2S_DATA,
+          .clock_pin_base = PIN_I2S_CLOCK_BASE,
           .dma_channel = 0,
           .pio_sm = 0,
   };
@@ -58,6 +59,8 @@ struct audio_buffer_pool *init_audio() {
   return producer_pool;
 }
 
+int RotaryEncoder::rotation = 0;
+
 int main() {
   stdio_init_all();
 
@@ -71,21 +74,45 @@ int main() {
     }
   }
 
-  gpio_init(PIN_BR1);
-  gpio_init(PIN_BR2);
-  gpio_init(PIN_BS1);
-  gpio_init(PIN_BS2);
-  gpio_init(PIN_BS3);
-  gpio_set_dir(PIN_BR1, GPIO_IN);
-  gpio_set_dir(PIN_BR2, GPIO_IN);
-  gpio_set_dir(PIN_BS1, GPIO_OUT);
-  gpio_set_dir(PIN_BS2, GPIO_OUT);
-  gpio_set_dir(PIN_BS3, GPIO_OUT);
-  gpio_pull_up(PIN_BR1);
-  gpio_pull_up(PIN_BR2);
-  gpio_put(PIN_BS1, 1);
-  gpio_put(PIN_BS2, 1);
-  gpio_put(PIN_BS3, 1);
+  gpio_init(PIN_B0);
+  gpio_init(PIN_B1);
+  gpio_init(PIN_B2);
+  gpio_init(PIN_B3);
+  gpio_init(PIN_B4);
+  gpio_init(PIN_B5);
+  gpio_init(PIN_B6);
+  gpio_init(PIN_B7);
+  gpio_init(PIN_B8);
+  // gpio_init(PIN_ENCA);
+  // gpio_init(PIN_ENCB);
+  gpio_init(PIN_ENCBtn);
+  gpio_set_dir(PIN_B0, GPIO_IN);
+  gpio_set_dir(PIN_B1, GPIO_IN);
+  gpio_set_dir(PIN_B2, GPIO_IN);
+  gpio_set_dir(PIN_B3, GPIO_IN);
+  gpio_set_dir(PIN_B4, GPIO_IN);
+  gpio_set_dir(PIN_B5, GPIO_IN);
+  gpio_set_dir(PIN_B6, GPIO_IN);
+  gpio_set_dir(PIN_B7, GPIO_IN);
+  gpio_set_dir(PIN_B8, GPIO_IN);
+  // gpio_set_dir(PIN_ENCA, GPIO_IN);
+  // gpio_set_dir(PIN_ENCB, GPIO_IN);
+  gpio_set_dir(PIN_ENCBtn, GPIO_IN);
+  gpio_pull_up(PIN_B0);
+  gpio_pull_up(PIN_B1);
+  gpio_pull_up(PIN_B2);
+  gpio_pull_up(PIN_B3);
+  gpio_pull_up(PIN_B4);
+  gpio_pull_up(PIN_B5);
+  gpio_pull_up(PIN_B6);
+  gpio_pull_up(PIN_B7);
+  gpio_pull_up(PIN_B8);
+  // gpio_pull_up(PIN_ENCA);
+  // gpio_pull_up(PIN_ENCB);
+  gpio_pull_up(PIN_ENCBtn);
+
+  RotaryEncoder enc(PIN_ENCA, PIN_ENCB);
+  enc.set_rotation(0);
 
   for (int i = 0; i < SINE_WAVE_TABLE_LEN; i++) {
     sine_wave_table[i] = 32767 * cosf(i * 2 * (float) (M_PI / SINE_WAVE_TABLE_LEN));
@@ -96,54 +123,44 @@ int main() {
   uint32_t pos = 0;
   uint32_t pos_max = 0x10000 * SINE_WAVE_TABLE_LEN;
   while (true) {
-    gpio_put(PIN_BS1, 0);
-    gpio_put(PIN_BS2, 1);
-    gpio_put(PIN_BS3, 1);
-    sleep_ms(1);
-    bool b2Value = gpio_get(PIN_BR1);
-    bool b1Value = gpio_get(PIN_BR2);
+    bool b0Value = !gpio_get(PIN_B0);
+    bool b1Value = !gpio_get(PIN_B1);
+    bool b2Value = !gpio_get(PIN_B2);
+    bool b3Value = !gpio_get(PIN_B3);
+    bool b4Value = !gpio_get(PIN_B4);
+    bool b5Value = !gpio_get(PIN_B5);
+    bool b6Value = !gpio_get(PIN_B6);
+    bool b7Value = !gpio_get(PIN_B7);
+    bool b8Value = !gpio_get(PIN_B8);
+    bool bEncValue = !gpio_get(PIN_ENCBtn);
 
-    gpio_put(PIN_BS1, 1);
-    gpio_put(PIN_BS2, 0);
-    gpio_put(PIN_BS3, 1);
-    sleep_ms(1);
-    bool b6Value = gpio_get(PIN_BR1);
-    bool b5Value = gpio_get(PIN_BR2);
-
-    gpio_put(PIN_BS1, 1);
-    gpio_put(PIN_BS2, 1);
-    gpio_put(PIN_BS3, 0);
-    sleep_ms(1);
-    bool b4Value = gpio_get(PIN_BR1);
-    bool b3Value = gpio_get(PIN_BR2);
-
-    printf("%d %d %d %d %d %d\n", b1Value, b2Value, b3Value, b4Value, b5Value, b6Value);
+    printf("%d %d %d %d %d %d %d %d %d %d %d\n", b0Value, b1Value, b2Value, b3Value, b4Value, b5Value, b6Value, b7Value, b8Value, bEncValue, enc.get_rotation());
 
     struct audio_buffer *buffer = take_audio_buffer(ap, true);
     int16_t *samples = (int16_t *) buffer->buffer->bytes;
     for (uint i = 0; i < buffer->max_sample_count; i++) {
       samples[i] = 0;
-      if (!b1Value) {
+      if (b1Value) {
         uint32_t clampedPosA = (pos * 3) % (0x10000 * SINE_WAVE_TABLE_LEN);
         samples[i] += (3 * sine_wave_table[clampedPosA >> 16u]) >> 8u;
       }
-      if (!b2Value) {
+      if (b2Value) {
         uint32_t clampedPosB = (pos * 4) % (0x10000 * SINE_WAVE_TABLE_LEN);
         samples[i] += (3 * sine_wave_table[clampedPosB >> 16u]) >> 8u;
       }
-      if (!b3Value) {
+      if (b3Value) {
         uint32_t clampedPosB = (pos * 5) % (0x10000 * SINE_WAVE_TABLE_LEN);
         samples[i] += (3 * sine_wave_table[clampedPosB >> 16u]) >> 8u;
       }
-      if (!b4Value) {
+      if (b4Value) {
         uint32_t clampedPosB = (pos * 6) % (0x10000 * SINE_WAVE_TABLE_LEN);
         samples[i] += (3 * sine_wave_table[clampedPosB >> 16u]) >> 8u;
       }
-      if (!b5Value) {
+      if (b5Value) {
         uint32_t clampedPosB = (pos * 7) % (0x10000 * SINE_WAVE_TABLE_LEN);
         samples[i] += (3 * sine_wave_table[clampedPosB >> 16u]) >> 8u;
       }
-      if (!b6Value) {
+      if (b6Value) {
         uint32_t clampedPosB = (pos * 8) % (0x10000 * SINE_WAVE_TABLE_LEN);
         samples[i] += (3 * sine_wave_table[clampedPosB >> 16u]) >> 8u;
       }

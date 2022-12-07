@@ -10,13 +10,17 @@
 
 #include "hardware/spi.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct st7789_config {
     spi_inst_t* spi;
     uint gpio_din;
     uint gpio_clk;
     int gpio_cs;
     uint gpio_dc;
-    uint gpio_rst;
+    // uint gpio_rst;
     // uint gpio_bl;
 };
 
@@ -26,5 +30,9 @@ void st7789_put(uint16_t pixel);
 void st7789_fill(uint16_t pixel);
 void st7789_set_cursor(uint16_t x, uint16_t y);
 void st7789_vertical_scroll(uint16_t row);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
