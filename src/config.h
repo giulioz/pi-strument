@@ -23,4 +23,7 @@
 #define PIN_I2S_DATA 2
 #define PIN_I2S_CLOCK_BASE 0
 
+#define PIN_ADC_MIC 26
+#define IN_ADC_MIC 0
+
 #endif
