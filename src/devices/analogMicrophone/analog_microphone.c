@@ -112,7 +112,6 @@ void analog_microphone_deinit() {
 }
 
 int analog_microphone_start() {
-    printf("dma_channel %d irq %d\n", analog_mic.dma_channel, analog_mic.dma_irq);
     irq_set_enabled(analog_mic.dma_irq, true);
     irq_set_exclusive_handler(analog_mic.dma_irq, analog_dma_handler);
 
@@ -133,14 +132,10 @@ int analog_microphone_start() {
         analog_mic.buffer_size
     );
 
-    printf("transfered\n");
-
     adc_run(true); // start running the adc
 }
 
 void analog_microphone_stop() {
-    adc_run(false); // stop running the adc
-
     dma_channel_abort(analog_mic.dma_channel);
 
     if (analog_mic.dma_irq == DMA_IRQ_0) {
@@ -150,6 +145,8 @@ void analog_microphone_stop() {
     }
 
     irq_set_enabled(analog_mic.dma_irq, false);
+
+    adc_run(false); // stop running the adc
 }
 
 static void analog_dma_handler() {

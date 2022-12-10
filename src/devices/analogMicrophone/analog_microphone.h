@@ -8,6 +8,8 @@
 #ifndef _PICO_ANALOG_MICROPHONE_H_
 #define _PICO_ANALOG_MICROPHONE_H_
 
+#include "pico/stdlib.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

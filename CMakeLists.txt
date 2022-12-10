@@ -8,7 +8,17 @@ set(CMAKE_CXX_STANDARD 17)
 project(PiStrument VERSION 1.0.0)
 pico_sdk_init()
 
-add_executable(PiStrument src/main.cpp src/RotaryEncoder.cpp src/st7789.c src/analog_microphone.c)
+add_executable(PiStrument
+  src/main.cpp
+  src/devices/hardware.cpp
+  src/devices/buttonMatrix/buttonMatrix.cpp
+  src/devices/rotaryEncoder/rotaryEncoder.cpp
+  src/devices/tftDisplay/st7789.c
+  src/devices/analogMicrophone/analog_microphone.c
+  src/graphics/graphics.cpp
+  src/graphics/sansserif_map.cpp
+  src/graphics/sansserif_info.cpp
+)
 
 target_link_libraries(PiStrument
   pico_stdlib
@@ -26,7 +36,7 @@ target_compile_definitions(PiStrument PRIVATE
   PICO_AUDIO_DMA_IRQ=1
 )
 
-pico_generate_pio_header(PiStrument ${CMAKE_CURRENT_LIST_DIR}/src/pio_rotary_encoder.pio)
+pico_generate_pio_header(PiStrument ${CMAKE_CURRENT_LIST_DIR}/src/devices/rotaryEncoder/pio_rotary_encoder.pio)
 
 pico_enable_stdio_usb(PiStrument 1)
 pico_enable_stdio_uart(PiStrument 0)
