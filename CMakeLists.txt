@@ -18,6 +18,7 @@ add_executable(PiStrument
   src/graphics/graphics.cpp
   src/graphics/sansserif_map.cpp
   src/graphics/sansserif_info.cpp
+  src/synth/synth.cpp
   src/synth/samples_raw.cpp
 )
 
@@ -36,8 +37,6 @@ target_compile_definitions(PiStrument PRIVATE
   PICO_AUDIO_I2S_MONO_INPUT=1
   PICO_AUDIO_DMA_IRQ=1
 )
-
-pico_generate_pio_header(PiStrument ${CMAKE_CURRENT_LIST_DIR}/src/devices/rotaryEncoder/pio_rotary_encoder.pio)
 
 pico_enable_stdio_usb(PiStrument 1)
 pico_enable_stdio_uart(PiStrument 0)

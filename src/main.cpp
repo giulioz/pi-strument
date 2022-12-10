@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "hardware/adc.h"
 #include "hardware/spi.h"
@@ -8,74 +9,7 @@
 
 #include "devices/hardware.h"
 #include "graphics/graphics.h"
-#include "synth/samples.h"
-
-struct Voice {
-  bool down;
-  uint32_t samplePos;
-  uint16_t pitchMul;
-};
-Voice voices[4] = {0};
-
-void startVoice(uint8_t voice, uint16_t pitchMul) {
-  voices[voice].down = true;
-  voices[voice].samplePos = 0;
-  voices[voice].pitchMul = pitchMul;
-}
-
-void stopVoice(uint8_t voice) {
-  voices[voice].down = false;
-  voices[voice].pitchMul = 0;
-}
-
-void stopAllVoices() {
-  stopVoice(0);
-  stopVoice(1);
-  stopVoice(2);
-  stopVoice(3);
-}
-
-uint8_t getEmptyVoice() {
-  if (!voices[0].down)
-    return 0;
-  if (!voices[1].down)
-    return 1;
-  if (!voices[2].down)
-    return 2;
-  if (!voices[3].down)
-    return 3;
-  return 0xFF;
-}
-
-uint8_t getVoiceWithPitch(uint16_t pitchMul) {
-  if (voices[0].down && voices[0].pitchMul == pitchMul)
-    return 0;
-  if (voices[1].down && voices[1].pitchMul == pitchMul)
-    return 1;
-  if (voices[2].down && voices[2].pitchMul == pitchMul)
-    return 2;
-  if (voices[3].down && voices[3].pitchMul == pitchMul)
-    return 3;
-  return 0xFF;
-}
-
-void updateVoiceDown(bool down, uint16_t pitchMul) {
-  int voiceId = getVoiceWithPitch(pitchMul);
-  if (down) {
-    if (voiceId == 0xFF) {
-      int emptyVoiceId = getEmptyVoice();
-      if (emptyVoiceId != 0xFF) {
-        startVoice(emptyVoiceId, pitchMul);
-      }
-    }
-  } else {
-    if (voiceId != 0xFF) {
-      voices[voiceId].down = false;
-    }
-  }
-}
-
-struct audio_buffer_pool *outAudioPool;
+#include "synth/synth.h"
 
 int16_t samplingBuffer[samples_length];
 int samplesRead = 0;
@@ -83,6 +17,52 @@ bool doneSampling = false;
 void onAnalogSamplesReady() {
   samplesRead = analog_microphone_read(samplingBuffer, samples_length);
   doneSampling = true;
+}
+
+char strBuf[16] = {0};
+void displaySample(uint16_t sampleId) {
+  SampleInfo sample = samples_info[sampleId];
+  uint32_t sampleStart = (sample.pos * 0x800);
+  uint32_t sampleLengthExp = (sample.len & 0x70) >> 4;
+  uint32_t sampleLength = (0x800 << sampleLengthExp);
+  bool sampleLoop = (sample.len & 0x80) != 0;
+
+  st7789_fill(0x0000);
+
+  int8_t *samples_raw_int = (int8_t *)samples_raw;
+  int8_t samplesMax = samples_raw_int[0];
+  for (uint32_t i = sampleStart; i < sampleStart + sampleLength; i++) {
+    if (abs(samples_raw_int[i]) > samplesMax)
+      samplesMax = abs(samples_raw_int[i]);
+  }
+
+  uint8_t samplesPerPixel = sampleLength / LCD_WIDTH;
+  for (uint32_t i = 0; i < LCD_HEIGHT; i++) {
+    uint32_t currentI = sampleStart + i * samplesPerPixel;
+    if (currentI >= sampleStart + sampleLength)
+      break;
+    int16_t lmin = samples_raw_int[currentI];
+    int16_t lmax = samples_raw_int[currentI];
+    for (uint16_t j = 0; j < samplesPerPixel; j++) {
+      if (samples_raw_int[currentI + j] > lmax)
+        lmax = samples_raw_int[currentI + j];
+      if (samples_raw_int[currentI + j] < lmin)
+        lmin = samples_raw_int[currentI + j];
+    }
+
+    int minY = (uint16_t)(((float)lmin / samplesMax) * (LCD_WIDTH / 2) +
+                          (LCD_WIDTH / 2));
+    int maxY = (uint16_t)(((float)lmax / samplesMax) * (LCD_WIDTH / 2) +
+                          (LCD_WIDTH / 2));
+    for (uint16_t y = minY; y < maxY; y++) {
+      st7789_set_cursor(y, i);
+      st7789_put(COL_RED);
+    }
+  }
+
+  memcpy(strBuf, &samples_name[sampleId * 8], 8);
+  snprintf(strBuf + 8, 16, " %d", sampleId);
+  printString(strBuf, 10, 80);
 }
 
 int main() {
@@ -113,12 +93,6 @@ int main() {
   // analog_microphone_stop();
   // analog_microphone_deinit();
 
-  // int16_t max = samples_raw[0];
-  // for (uint32_t i = 0; i < samples_length; i++) {
-  //   if (abs(samples_raw[i]) > max)
-  //     max = abs(samples_raw[i]);
-  // }
-
   // st7789_fill(0x0000);
   // // printString("Sampled!", 10, 80);
   // for (uint32_t i = 0; i < LCD_HEIGHT; i++) {
@@ -142,59 +116,32 @@ int main() {
   //   }
   // }
 
-  outAudioPool = initAudioOut();
+  audio_buffer_pool *outAudioPool = initAudioOut();
 
   int sampleId = -1;
 
   while (true) {
-    struct audio_buffer *buffer = take_audio_buffer(outAudioPool, true);
-    int16_t *samples = (int16_t *)buffer->buffer->bytes;
-
+    if (rotaryEncoderRotation < 0)
+      rotaryEncoderRotation = 0;
     if (sampleId != rotaryEncoderRotation % 256) {
       sampleId = rotaryEncoderRotation % 256;
-      if (sampleId < 0)
-        sampleId = 0;
-      st7789_fill(0x0000);
-      printChars(&samples_name[sampleId * 8], 8, 10, 80);
+      displaySample(sampleId);
     }
 
-    SampleInfo sample = samples_info[sampleId];
-    uint32_t sampleStart = (sample.pos * 0x800);
-    uint32_t sampleLengthExp = (sample.len & 0x70) >> 4;
-    uint32_t sampleLength = (0x800 << sampleLengthExp);
-    bool sampleLoop = (sample.len & 0x80) != 0;
+    updateHardware();
 
-    for (uint inSamplePos = 0; inSamplePos < buffer->max_sample_count;
-         inSamplePos++) {
-      updateHardware();
+    updateVoiceDown(buttonMatrixState.B0, NOTE_C4, 0);
+    updateVoiceDown(buttonMatrixState.B1, NOTE_C4, 3);
+    updateVoiceDown(buttonMatrixState.B2, NOTE_C4, 7);
+    updateVoiceDown(buttonMatrixState.B3, NOTE_C4, 8);
+    updateVoiceDown(buttonMatrixState.B4, NOTE_C4, 9);
+    updateVoiceDown(buttonMatrixState.B5, NOTE_C4, 10);
+    updateVoiceDown(buttonMatrixState.B6, NOTE_C4, 11);
+    updateVoiceDown(buttonMatrixState.B7, NOTE_C4, 13);
 
-      updateVoiceDown(buttonMatrixState.B0, 1);
-      updateVoiceDown(buttonMatrixState.B1, 2);
-      updateVoiceDown(buttonMatrixState.B2, 3);
-      updateVoiceDown(buttonMatrixState.B3, 4);
-      updateVoiceDown(buttonMatrixState.B4, 5);
-      updateVoiceDown(buttonMatrixState.B5, 6);
-      updateVoiceDown(buttonMatrixState.B6, 7);
-      updateVoiceDown(buttonMatrixState.B7, 8);
-
-      samples[inSamplePos] = 0;
-
-      for (int voiceId = 0; voiceId < 4; voiceId++) {
-        if (voices[voiceId].down) {
-          if (voices[voiceId].samplePos >= (sampleLength << 1)) {
-            if (sampleLoop)
-              voices[voiceId].samplePos = 0;
-            else
-              continue;
-          }
-          samples[inSamplePos] +=
-              ((int8_t *)
-                   samples_raw)[sampleStart + (voices[voiceId].samplePos >> 1)]
-              << 6;
-          voices[voiceId].samplePos += voices[voiceId].pitchMul;
-        }
-      }
-    }
+    struct audio_buffer *buffer = take_audio_buffer(outAudioPool, true);
+    int16_t *outBufferSamples = (int16_t *)buffer->buffer->bytes;
+    runSynth(outBufferSamples, buffer->max_sample_count);
     buffer->sample_count = buffer->max_sample_count;
     give_audio_buffer(outAudioPool, buffer);
   }
