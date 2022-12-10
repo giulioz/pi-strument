@@ -14,8 +14,8 @@ typedef struct CharInfo {
   int xadvance;
 } CharInfo;
 
-extern uint8_t sansserif_map[];
-extern CharInfo sansserif_chars[];
+const extern uint8_t sansserif_map[];
+const extern CharInfo sansserif_chars[];
 
 const int sansserif_baseIndex = 32;
 const int sansserif_lineHeight = 36;

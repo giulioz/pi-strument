@@ -1,6 +1,6 @@
 #include "sansserif.h"
 
-CharInfo sansserif_chars[] = {
+const CharInfo sansserif_chars[] = {
   {.id=32, .x=0, .y=0, .width=0, .height=0, .xoffset=0, .yoffset=0, .xadvance=10},
   {.id=33, .x=219, .y=128, .width=7, .height=28, .xoffset=2, .yoffset=0, .xadvance=10},
   {.id=34, .x=233, .y=186, .width=12, .height=13, .xoffset=0, .yoffset=0, .xadvance=13},

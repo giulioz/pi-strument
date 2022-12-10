@@ -18,6 +18,7 @@ add_executable(PiStrument
   src/graphics/graphics.cpp
   src/graphics/sansserif_map.cpp
   src/graphics/sansserif_info.cpp
+  src/synth/samples_raw.cpp
 )
 
 target_link_libraries(PiStrument
