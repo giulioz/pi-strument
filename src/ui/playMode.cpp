@@ -35,7 +35,7 @@ static void updateLeds() {
 }
 
 static char strBuf[32] = {0};
-void redrawUI(int sampleId, int octave, int volume, int selectedMenuItem) {
+static void redrawUI(int sampleId, int octave, int volume, int selectedMenuItem) {
   memcpy(strBuf, &samples_name[sampleId * 8], 8);
   snprintf(strBuf + 8, 32, " %d", sampleId);
   printString(strBuf, 20, 100);

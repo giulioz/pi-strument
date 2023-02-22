@@ -27,6 +27,7 @@ add_executable(PiStrument
   src/ui/common.cpp
   src/ui/mainMenu.cpp
   src/ui/playMode.cpp
+  src/ui/sequencerMode.cpp
 )
 
 target_link_libraries(PiStrument

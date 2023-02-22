@@ -6,7 +6,7 @@
 
 #include "synth.h"
 
-const int nSteps = 32;
+const int nSteps = 16;
 const int msPerStep = 2000 / nSteps;
 const uint8_t eventsPerStep = 8;
 

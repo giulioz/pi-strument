@@ -31,42 +31,42 @@ void Synth::stopAllVoices() {
 }
 
 uint8_t Synth::getEmptyVoice() {
-  if (!voices[0].down || voices[0].finished)
+  if (!voices[0].down)
     return 0;
-  if (!voices[1].down || voices[1].finished)
+  if (!voices[1].down)
     return 1;
-  if (!voices[2].down || voices[2].finished)
+  if (!voices[2].down)
     return 2;
-  if (!voices[3].down || voices[3].finished)
+  if (!voices[3].down)
     return 3;
-  if (!voices[4].down || voices[4].finished)
+  if (!voices[4].down)
     return 4;
-  if (!voices[5].down || voices[5].finished)
+  if (!voices[5].down)
     return 5;
-  if (!voices[6].down || voices[6].finished)
+  if (!voices[6].down)
     return 6;
-  if (!voices[7].down || voices[7].finished)
+  if (!voices[7].down)
     return 7;
   return 0xFF;
 }
 
 uint8_t Synth::getRunningNVoices() {
   uint8_t count = 0;
-  if (!voices[0].down && !voices[0].finished)
+  if (!voices[0].down)
     count++;
-  if (!voices[1].down && !voices[1].finished)
+  if (!voices[1].down)
     count++;
-  if (!voices[2].down && !voices[2].finished)
+  if (!voices[2].down)
     count++;
-  if (!voices[3].down && !voices[3].finished)
+  if (!voices[3].down)
     count++;
-  if (!voices[4].down && !voices[4].finished)
+  if (!voices[4].down)
     count++;
-  if (!voices[5].down && !voices[5].finished)
+  if (!voices[5].down)
     count++;
-  if (!voices[6].down && !voices[6].finished)
+  if (!voices[6].down)
     count++;
-  if (!voices[7].down && !voices[7].finished)
+  if (!voices[7].down)
     count++;
   return count;
 }
