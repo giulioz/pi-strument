@@ -4,7 +4,7 @@
 #include "pico/stdlib.h"
 #include <stdint.h>
 
-#include "synth/synth.h"
+#include "synth.h"
 
 const int nSteps = 32;
 const int msPerStep = 2000 / nSteps;

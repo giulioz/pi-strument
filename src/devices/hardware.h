@@ -3,10 +3,10 @@
 
 #include "analogMicrophone/analog_microphone.h"
 #include "buttonMatrix/buttonMatrix.h"
+#include "leds/leds.h"
 #include "pico/audio_i2s.h"
 #include "rotaryEncoder/rotaryEncoder.h"
 #include "tftDisplay/st7789.h"
-#include "leds/leds.h"
 
 #define PIN_B0 3
 #define PIN_B1 4
@@ -53,9 +53,9 @@ extern st7789_config lcdConfig;
 extern analog_microphone_config analogMicConfig;
 extern audio_format_t outAudioFormat;
 extern audio_buffer_format outProducerFormat;
+extern audio_buffer_pool *outAudioPool;
 
 void initHardware();
 void updateHardware();
-audio_buffer_pool *initAudioOut();
 
 #endif

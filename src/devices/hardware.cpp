@@ -26,16 +26,7 @@ audio_format_t outAudioFormat = {
 audio_buffer_format outProducerFormat = {.format = &outAudioFormat,
                                          .sample_stride = 2};
 
-void initHardware() {
-  initRotaryEncoder();
-  initButtonMatrix();
-  initLEDS();
-
-  st7789_init(&lcdConfig, LCD_WIDTH, LCD_HEIGHT);
-  st7789_fill(0x0000);
-}
-
-void updateHardware() { getButtonMatrix(); }
+audio_buffer_pool *outAudioPool;
 
 audio_buffer_pool *initAudioOut() {
   audio_buffer_pool *producerPool =
@@ -59,3 +50,16 @@ audio_buffer_pool *initAudioOut() {
   audio_i2s_set_enabled(true);
   return producerPool;
 }
+
+void initHardware() {
+  initRotaryEncoder();
+  initButtonMatrix();
+  initLEDS();
+
+  st7789_init(&lcdConfig, LCD_WIDTH, LCD_HEIGHT);
+  st7789_fill(0x0000);
+
+  outAudioPool = initAudioOut();
+}
+
+void updateHardware() { getButtonMatrix(); }

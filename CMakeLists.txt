@@ -17,13 +17,16 @@ add_executable(PiStrument
   src/devices/tftDisplay/st7789.c
   src/devices/analogMicrophone/analog_microphone.c
   src/graphics/graphics.cpp
-  src/graphics/sansserif_map.cpp
-  src/graphics/sansserif_info.cpp
+  # src/graphics/sansserif_map.cpp
+  # src/graphics/sansserif_info.cpp
+  src/graphics/pixelfnt_map.cpp
+  src/graphics/pixelfnt_info.cpp
   src/synth/synth.cpp
   src/synth/samples_raw.cpp
-  src/sequencer.cpp
-  src/ui/mainMenu.cpp
+  src/synth/sequencer.cpp
   src/ui/common.cpp
+  src/ui/mainMenu.cpp
+  src/ui/playMode.cpp
 )
 
 target_link_libraries(PiStrument
