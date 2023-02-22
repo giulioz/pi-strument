@@ -11,6 +11,8 @@
 #include "graphics/graphics.h"
 #include "sequencer.h"
 #include "synth/synth.h"
+#include "ui/common.h"
+#include "ui/mainMenu.h"
 
 int16_t samplingBuffer[samples_length];
 int samplesRead = 0;
@@ -20,61 +22,7 @@ void onAnalogSamplesReady() {
   doneSampling = true;
 }
 
-char strBuf[16] = {0};
-void displaySample(uint16_t sampleId) {
-  SampleInfo sample = samples_info[sampleId];
-  uint32_t sampleStart = (sample.pos * 0x800);
-  uint32_t sampleLengthExp = (sample.len & 0x70) >> 4;
-  uint32_t sampleLength = (0x800 << sampleLengthExp);
-  bool sampleLoop = (sample.len & 0x80) != 0;
-
-  st7789_fill(0x0000);
-
-  int8_t *samples_raw_int = (int8_t *)samples_raw;
-  int8_t samplesMax = samples_raw_int[0];
-  for (uint32_t i = sampleStart; i < sampleStart + sampleLength; i++) {
-    if (abs(samples_raw_int[i]) > samplesMax)
-      samplesMax = abs(samples_raw_int[i]);
-  }
-
-  uint8_t samplesPerPixel = sampleLength / LCD_WIDTH;
-  for (uint32_t i = 0; i < LCD_HEIGHT; i++) {
-    uint32_t currentI = sampleStart + i * samplesPerPixel;
-    if (currentI >= sampleStart + sampleLength)
-      break;
-    int16_t lmin = samples_raw_int[currentI];
-    int16_t lmax = samples_raw_int[currentI];
-    for (uint16_t j = 0; j < samplesPerPixel; j++) {
-      if (samples_raw_int[currentI + j] > lmax)
-        lmax = samples_raw_int[currentI + j];
-      if (samples_raw_int[currentI + j] < lmin)
-        lmin = samples_raw_int[currentI + j];
-    }
-
-    int minY = (uint16_t)(((float)lmin / samplesMax) * (LCD_WIDTH / 2) +
-                          (LCD_WIDTH / 2));
-    int maxY = (uint16_t)(((float)lmax / samplesMax) * (LCD_WIDTH / 2) +
-                          (LCD_WIDTH / 2));
-    for (uint16_t y = minY; y < maxY; y++) {
-      st7789_set_cursor(y, i);
-      st7789_put(COL_RED);
-    }
-  }
-
-  memcpy(strBuf, &samples_name[sampleId * 8], 8);
-  snprintf(strBuf + 8, 16, " %d", sampleId);
-  printString(strBuf, 10, 80);
-}
-
-enum CurrentOp {
-  OP_MENU,
-  OP_PLAY,
-  OP_SEQUENCER,
-  OP_SAMPLER,
-};
-
 CurrentOp currentOp = OP_MENU;
-int menuPos = 0;
 int playSampleId = -1;
 
 int main() {
@@ -88,43 +36,7 @@ int main() {
 
   while (true) {
     if (currentOp == OP_MENU) {
-      st7789_fill(0x0000);
-      printString("1. Play", 5, 120);
-      printString("2. Sequencer", 5, 90);
-      printString("3. Sampler", 5, 60);
-      setLEDS(0b111);
-
-      while (true) {
-        updateHardware();
-        if (buttonMatrixState.B0) {
-          currentOp = OP_PLAY;
-          rotaryEncoderRotation = playSampleId;
-          while (buttonMatrixState.B0) {
-            sleep_ms(100);
-            updateHardware();
-          }
-          buttonMatrixState.B0 = false;
-          break;
-        }
-        if (buttonMatrixState.B1) {
-          currentOp = OP_SEQUENCER;
-          while (buttonMatrixState.B1) {
-            sleep_ms(100);
-            updateHardware();
-          }
-          buttonMatrixState.B1 = false;
-          break;
-        }
-        if (buttonMatrixState.B2) {
-          currentOp = OP_SAMPLER;
-          while (buttonMatrixState.B2) {
-            sleep_ms(100);
-            updateHardware();
-          }
-          buttonMatrixState.B2 = false;
-          break;
-        }
-      }
+      startMainMenu(currentOp);
     } else if (currentOp == OP_PLAY) {
       rotaryEncoderRotation = 0;
       playSampleId = 0;
@@ -145,14 +57,23 @@ int main() {
           displaySample(playSampleId);
         }
 
-        synth.updateVoiceDown(buttonMatrixState.B0, NOTE_C4, 0);
-        synth.updateVoiceDown(buttonMatrixState.B1, NOTE_C4, 3);
-        synth.updateVoiceDown(buttonMatrixState.B2, NOTE_C4, 8);
-        synth.updateVoiceDown(buttonMatrixState.B3, NOTE_A3, 8);
-        synth.updateVoiceDown(buttonMatrixState.B4, NOTE_C4, 9);
-        synth.updateVoiceDown(buttonMatrixState.B5, NOTE_C4, 11);
-        synth.updateVoiceDown(buttonMatrixState.B6, NOTE_C4, 13);
-        synth.updateVoiceDown(buttonMatrixState.B7, NOTE_C4, 18);
+        // synth.updateVoiceDown(buttonMatrixState.B0, NOTE_C4, 0);
+        // synth.updateVoiceDown(buttonMatrixState.B1, NOTE_C4, 3);
+        // synth.updateVoiceDown(buttonMatrixState.B2, NOTE_C4, 8);
+        // synth.updateVoiceDown(buttonMatrixState.B3, NOTE_A3, 8);
+        // synth.updateVoiceDown(buttonMatrixState.B4, NOTE_C4, 9);
+        // synth.updateVoiceDown(buttonMatrixState.B5, NOTE_C4, 11);
+        // synth.updateVoiceDown(buttonMatrixState.B6, NOTE_C4, 13);
+        // synth.updateVoiceDown(buttonMatrixState.B7, NOTE_C4, 18);
+
+        synth.updateVoiceDown(buttonMatrixState.B0, NOTE_C4, playSampleId);
+        synth.updateVoiceDown(buttonMatrixState.B1, NOTE_D4, playSampleId);
+        synth.updateVoiceDown(buttonMatrixState.B2, NOTE_E4, playSampleId);
+        synth.updateVoiceDown(buttonMatrixState.B3, NOTE_F4, playSampleId);
+        synth.updateVoiceDown(buttonMatrixState.B4, NOTE_G4, playSampleId);
+        synth.updateVoiceDown(buttonMatrixState.B5, NOTE_A5, playSampleId);
+        synth.updateVoiceDown(buttonMatrixState.B6, NOTE_B5, playSampleId);
+        synth.updateVoiceDown(buttonMatrixState.B7, NOTE_C5, playSampleId);
 
         uint16_t ledsState = 0;
         if (buttonMatrixState.B0)

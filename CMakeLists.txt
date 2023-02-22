@@ -22,6 +22,8 @@ add_executable(PiStrument
   src/synth/synth.cpp
   src/synth/samples_raw.cpp
   src/sequencer.cpp
+  src/ui/mainMenu.cpp
+  src/ui/common.cpp
 )
 
 target_link_libraries(PiStrument
