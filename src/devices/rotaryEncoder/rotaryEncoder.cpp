@@ -27,7 +27,7 @@ void encoderCallback(uint gpio, uint32_t events) {
     {
       cw_fall = 0;
       ccw_fall = 0;
-      rotaryEncoderRotation -= 1;
+      rotaryEncoderRotation += 1;
     }
   }
 
@@ -39,7 +39,7 @@ void encoderCallback(uint gpio, uint32_t events) {
     {
       cw_fall = 0;
       ccw_fall = 0;
-      rotaryEncoderRotation += 1;
+      rotaryEncoderRotation -= 1;
     }
   }
 }

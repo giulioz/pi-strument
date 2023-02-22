@@ -29,6 +29,7 @@ audio_buffer_format outProducerFormat = {.format = &outAudioFormat,
 void initHardware() {
   initRotaryEncoder();
   initButtonMatrix();
+  initLEDS();
 
   st7789_init(&lcdConfig, LCD_WIDTH, LCD_HEIGHT);
   st7789_fill(0x0000);

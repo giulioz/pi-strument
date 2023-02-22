@@ -11,6 +11,7 @@ pico_sdk_init()
 add_executable(PiStrument
   src/main.cpp
   src/devices/hardware.cpp
+  src/devices/leds/leds.cpp
   src/devices/buttonMatrix/buttonMatrix.cpp
   src/devices/rotaryEncoder/rotaryEncoder.cpp
   src/devices/tftDisplay/st7789.c
@@ -20,6 +21,7 @@ add_executable(PiStrument
   src/graphics/sansserif_info.cpp
   src/synth/synth.cpp
   src/synth/samples_raw.cpp
+  src/sequencer.cpp
 )
 
 target_link_libraries(PiStrument
