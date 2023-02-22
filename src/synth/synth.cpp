@@ -2,12 +2,14 @@
 
 #include "synth.h"
 
-void Synth::startVoice(uint8_t voice, uint16_t freq, uint16_t sampleId) {
+void Synth::startVoice(uint8_t voice, uint16_t freq, uint16_t sampleId,
+                       uint8_t volume) {
   voices[voice].down = true;
   voices[voice].finished = false;
   voices[voice].samplePos = 0;
   voices[voice].freq = freq;
   voices[voice].sampleId = sampleId;
+  voices[voice].volume = volume;
 }
 
 void Synth::stopVoice(uint8_t voice) {
@@ -97,13 +99,14 @@ uint8_t Synth::getVoice(uint16_t freq, uint16_t sampleId) {
   return 0xFF;
 }
 
-void Synth::updateVoiceDown(bool down, uint16_t freq, uint16_t sampleId) {
+void Synth::updateVoiceDown(bool down, uint16_t freq, uint16_t sampleId,
+                            uint8_t volume) {
   int voiceId = getVoice(freq, sampleId);
   if (down) {
     if (voiceId == 0xFF) {
       int emptyVoiceId = getEmptyVoice();
       if (emptyVoiceId != 0xFF) {
-        startVoice(emptyVoiceId, freq, sampleId);
+        startVoice(emptyVoiceId, freq, sampleId, volume);
       }
     }
   } else {
@@ -117,8 +120,7 @@ void Synth::runSynth(int16_t *buffer, uint32_t bufferSize) {
   memset(buffer, 0, bufferSize * 2);
 
   int nVoices = getRunningNVoices();
-  // int volume = nVoices == 1 ? 8 : 7;
-  int volume = 6;
+  int globalVolume = nVoices == 1 ? 8 : 9;
 
   for (int voiceId = 0; voiceId < totalVoices; voiceId++) {
     if (voices[voiceId].down) {
@@ -138,8 +140,11 @@ void Synth::runSynth(int16_t *buffer, uint32_t bufferSize) {
             voices[voiceId].finished = true;
           }
         } else {
-          buffer[bufferPos] +=
-              ((int8_t *)samples_raw)[sampleStart + normSamplePos] << volume;
+          uint32_t valueFromBuffer =
+              ((int8_t *)samples_raw)[sampleStart + normSamplePos] << 16;
+          valueFromBuffer *= voices[voiceId].volume;
+          valueFromBuffer /= 8;
+          buffer[bufferPos] += (valueFromBuffer >> globalVolume);
           voices[voiceId].samplePos +=
               (((voices[voiceId].freq << 8) * 277) / NOTE_A3) / 240;
         }

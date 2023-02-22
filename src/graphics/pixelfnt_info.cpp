@@ -155,6 +155,6 @@ const CharInfo pixelfnt_chars[] = {
   {.id=183, .x=0, .y=0, .width=0, .height=0, .xoffset=0, .yoffset=0, .xadvance=0 },
   {.id=184, .x=0, .y=0, .width=0, .height=0, .xoffset=0, .yoffset=0, .xadvance=0 },
   {.id=185, .x=0, .y=0, .width=0, .height=0, .xoffset=0, .yoffset=0, .xadvance=0 },
-  {.id=186, .x=0, .y=0, .width=0, .height=0, .xoffset=0, .yoffset=0, .xadvance=0 },
+  {.id=186, .x=114, .y=59, .width=11, .height=9, .xoffset=-1, .yoffset=5, .xadvance=11 }, // special for empty black space
   {.id=187, .x=45, .y=61, .width=11, .height=9, .xoffset=-1, .yoffset=5, .xadvance=11 }
 };

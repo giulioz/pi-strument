@@ -1,7 +1,7 @@
 #include "common.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "pico/stdlib.h"
 
@@ -20,7 +20,6 @@ void waitForNoInput() {
 }
 
 void displaySample(uint16_t sampleId) {
-  char strBuf[16] = {0};
   SampleInfo sample = samples_info[sampleId];
   uint32_t sampleStart = (sample.pos * 0x800);
   uint32_t sampleLengthExp = (sample.len & 0x70) >> 4;
@@ -59,8 +58,4 @@ void displaySample(uint16_t sampleId) {
       st7789_put(COL_RED);
     }
   }
-
-  memcpy(strBuf, &samples_name[sampleId * 8], 8);
-  snprintf(strBuf + 8, 16, " %d", sampleId);
-  printString(strBuf, 10, 80);
 }

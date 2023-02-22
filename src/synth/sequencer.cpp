@@ -52,7 +52,7 @@ void Sequencer::update() {
       if (recordedSteps[currentStep].events[i].enabled) {
         synth->startVoice(recordedSteps[currentStep].events[i].nVoice,
                           recordedSteps[currentStep].events[i].freq,
-                          recordedSteps[currentStep].events[i].sampleId);
+                          recordedSteps[currentStep].events[i].sampleId, 6);
       }
     }
 
