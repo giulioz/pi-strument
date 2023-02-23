@@ -30,22 +30,22 @@ void Synth::stopAllVoices() {
   stopVoice(7);
 }
 
-uint8_t Synth::getEmptyVoice() {
-  if (!voices[0].down)
+uint8_t Synth::getEmptyVoice(bool alsoFinished) {
+  if (!voices[0].down || (alsoFinished && voices[0].finished))
     return 0;
-  if (!voices[1].down)
+  if (!voices[1].down || (alsoFinished && voices[1].finished))
     return 1;
-  if (!voices[2].down)
+  if (!voices[2].down || (alsoFinished && voices[2].finished))
     return 2;
-  if (!voices[3].down)
+  if (!voices[3].down || (alsoFinished && voices[3].finished))
     return 3;
-  if (!voices[4].down)
+  if (!voices[4].down || (alsoFinished && voices[4].finished))
     return 4;
-  if (!voices[5].down)
+  if (!voices[5].down || (alsoFinished && voices[5].finished))
     return 5;
-  if (!voices[6].down)
+  if (!voices[6].down || (alsoFinished && voices[6].finished))
     return 6;
-  if (!voices[7].down)
+  if (!voices[7].down || (alsoFinished && voices[7].finished))
     return 7;
   return 0xFF;
 }
@@ -104,7 +104,7 @@ void Synth::updateVoiceDown(bool down, uint16_t freq, uint16_t sampleId,
   int voiceId = getVoice(freq, sampleId);
   if (down) {
     if (voiceId == 0xFF) {
-      int emptyVoiceId = getEmptyVoice();
+      int emptyVoiceId = getEmptyVoice(false);
       if (emptyVoiceId != 0xFF) {
         startVoice(emptyVoiceId, freq, sampleId, volume);
       }

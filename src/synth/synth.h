@@ -25,7 +25,7 @@ public:
                   uint8_t volume);
   void stopVoice(uint8_t voice);
   void stopAllVoices();
-  uint8_t getEmptyVoice();
+  uint8_t getEmptyVoice(bool alsoFinished);
   uint8_t getRunningNVoices();
   uint8_t getVoice(uint16_t freq, uint16_t sampleId);
   void updateVoiceDown(bool down, uint16_t freq, uint16_t sampleId,

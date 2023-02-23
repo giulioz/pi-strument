@@ -11,13 +11,14 @@ uint8_t getEventFreeI(const SequencerStep &step) {
   return 0xFF;
 }
 
-Sequencer::Sequencer(Synth *synth) : synth(synth), lastStep(0), running(false) {
-  reset();
-}
+Sequencer::Sequencer(Synth *synth) : synth(synth) { reset(); }
 
 void Sequencer::reset() {
-  memset(recordedSteps, 0, sizeof(SequencerStep) * nSteps);
+  memset(recordedSteps, 0, sizeof(SequencerStep) * stepsPerBar * maxBars);
   running = false;
+  totalEvents = 0;
+  currentBars = 1;
+  lastStep = 0;
 }
 
 void Sequencer::start() {
@@ -28,7 +29,7 @@ void Sequencer::start() {
 void Sequencer::update() {
   currentTime = get_absolute_time();
   int64_t timeDiffMs = absolute_time_diff_us(startTime, currentTime) / 1000;
-  int currentStep = (timeDiffMs / msPerStep) % nSteps;
+  int currentStep = (timeDiffMs / msPerStep) % (stepsPerBar * currentBars);
 
   if (currentStep != lastStep) {
     // Metronome
@@ -50,9 +51,12 @@ void Sequencer::update() {
 
     for (uint8_t i = 0; i < eventsPerStep; i++) {
       if (recordedSteps[currentStep].events[i].enabled) {
-        synth->startVoice(recordedSteps[currentStep].events[i].nVoice,
-                          recordedSteps[currentStep].events[i].freq,
-                          recordedSteps[currentStep].events[i].sampleId, 1);
+        uint8_t freeVoice = synth->getEmptyVoice(true);
+        if (freeVoice != 0xFF) {
+          synth->startVoice(freeVoice,
+                            recordedSteps[currentStep].events[i].freq,
+                            recordedSteps[currentStep].events[i].sampleId, 1);
+        }
       }
     }
 
@@ -60,12 +64,30 @@ void Sequencer::update() {
   }
 }
 
-void Sequencer::addEventAtCurrentTime(const SequencerStepEvent &event) {
+void Sequencer::addEventAtCurrentTime(const SequencerStepEvent &event,
+                                      int quantReso) {
   currentTime = get_absolute_time();
   int64_t timeDiffMs = absolute_time_diff_us(startTime, currentTime) / 1000;
-  int closestStep = (int)(roundf((float)timeDiffMs / msPerStep)) % nSteps;
+  int closestStep =
+      ((int)(roundf((float)timeDiffMs / msPerStep / quantReso)) * quantReso) %
+      (stepsPerBar * currentBars);
   uint8_t nextFreeEvent = getEventFreeI(recordedSteps[closestStep]);
   if (nextFreeEvent != 0xFF) {
+    if (totalEvents == 0) {
+      lastStep = 0;
+      startTime = currentTime;
+    }
     recordedSteps[closestStep].events[nextFreeEvent] = event;
+    totalEvents++;
   }
+}
+
+void Sequencer::setBars(int nBars) {
+  if (currentBars < nBars) {
+    // Copy our current pattern so far at the end to extend it
+    memcpy(&recordedSteps[currentBars * stepsPerBar], &recordedSteps[0],
+           ((nBars - currentBars) * stepsPerBar) * sizeof(SequencerStep));
+  }
+
+  currentBars = nBars;
 }
